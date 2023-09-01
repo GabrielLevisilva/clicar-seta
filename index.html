@@ -3,78 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor de Personagens</title>
+    <title>Jogo de Tiro</title>
     <style>
-        .player {
-            width: 50px;
-            height: 50px;
-            background-color: red;
-            position: absolute;
-            cursor: grab; /* Define o cursor como uma mãozinha para indicar arrastar */
+        canvas {
+            border: 1px solid #000;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .mobile-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .mobile-button {
+            width: 40px;
+            height: 40px;
+            background-color: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="player"></div>
-
+    <canvas id="jogo" width="400" height="400"></canvas>
+    <div class="mobile-controls">
+        <div class="mobile-button" id="left-button">&#9665;</div>
+        <div class="mobile-button" id="right-button">&#9655;</div>
+        <div class="mobile-button" id="shoot-button">&#128165;</div>
+    </div>
     <script>
-        const player = document.querySelector(".player");
-        let isDragging = false; // Flag para rastrear o estado de arrastar
-        let offsetX, offsetY;
+        const canvas = document.getElementById("jogo");
+        const ctx = canvas.getContext("2d");
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            width: 30,
+            height: 30,
+            color: "blue",
+            speed: 5
+        };
 
-        player.addEventListener("mousedown", (e) => {
-            isDragging = true;
-            // Calcula o deslocamento entre o clique do mouse e a posição atual do jogador
-            offsetX = e.clientX - player.getBoundingClientRect().left;
-            offsetY = e.clientY - player.getBoundingClientRect().top;
-            player.style.cursor = "grabbing"; // Altera o cursor durante o arrasto
-        });
+        const bullets = [];
 
-        player.addEventListener("touchstart", (e) => {
-            isDragging = true;
-            const touch = e.touches[0];
-            // Calcula o deslocamento entre o toque e a posição atual do jogador
-            offsetX = touch.clientX - player.getBoundingClientRect().left;
-            offsetY = touch.clientY - player.getBoundingClientRect().top;
-        });
+        const enemies = [];
 
-        document.addEventListener("mousemove", (e) => {
-            if (!isDragging) return;
+        const leftButton = document.getElementById("left-button");
+        const rightButton = document.getElementById("right-button");
+        const shootButton = document.getElementById("shoot-button");
 
-            // Calcula as novas coordenadas com base no mouse e no deslocamento
-            playerX = e.clientX - offsetX;
-            playerY = e.clientY - offsetY;
+        let shooting = false;
 
-            // Atualiza a posição do jogador
-            updatePlayerPosition();
-        });
-
-        document.addEventListener("touchmove", (e) => {
-            if (!isDragging) return;
-            const touch = e.touches[0];
-
-            // Calcula as novas coordenadas com base no toque e no deslocamento
-            playerX = touch.clientX - offsetX;
-            playerY = touch.clientY - offsetY;
-
-            // Atualiza a posição do jogador
-            updatePlayerPosition();
-        });
-
-        document.addEventListener("mouseup", () => {
-            isDragging = false;
-            player.style.cursor = "grab"; // Restaura o cursor quando o arrasto termina
-        });
-
-        player.addEventListener("touchend", () => {
-            isDragging = false;
-        });
-
-        // Função para atualizar a posição do jogador
-        function updatePlayerPosition() {
-            player.style.left = playerX + "px";
-            player.style.top = playerY + "px";
+        function drawPlayer() {
+            ctx.beginPath();
+            ctx.rect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = player.color;
+            ctx.fill();
+            ctx.closePath();
         }
+
+        function drawBullets() {
+            for (let i = 0; i < bullets.length; i++) {
+                ctx.beginPath();
+                ctx.arc(bullets[i].x, bullets[i].y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = "red";
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function drawEnemies() {
+            for (let i = 0; i < enemies.length; i++) {
+                ctx.beginPath();
+                ctx.arc(enemies[i].x, enemies[i].y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = "green";
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function moveBullets() {
+            for (let i = 0; i < bullets.length; i++) {
+                bullets[i].y -= 2;
+                if (bullets[i].y < 0) {
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+
+        function moveEnemies() {
+            for (let i = 0; i < enemies.length; i++) {
+                enemies[i].y += 1;
+                if (enemies[i].y > canvas.height) {
+                    enemies.splice(i, 1);
+                }
+            }
+        }
+
+        function collisionDetection() {
+            for (let i = 0; i < bullets.length; i++) {
+                for (let j = 0; j < enemies.length; j++) {
+                    const bullet = bullets[i];
+                    const enemy = enemies[j];
+                    if (
+                        bullet.x < enemy.x + 10 &&
+                        bullet.x + 5 > enemy.x &&
+                        bullet.y < enemy.y + 10 &&
+                        bullet.y + 5 > enemy.y
+                    ) {
+                        bullets.splice(i, 1);
+                        enemies.splice(j, 1);
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawBullets();
+            drawEnemies();
+            moveBullets();
+            moveEnemies();
+            collisionDetection();
+            requestAnimationFrame(draw);
+        }
+
+        function shoot() {
+            bullets.push({
+                x: player.x + player.width / 2,
+                y: player.y,
+            });
+        }
+
+        leftButton.addEventListener("touchstart", () => {
+            player.x -= player.speed;
+        });
+
+        rightButton.addEventListener("touchstart", () => {
+            player.x += player.speed;
+        });
+
+        shootButton.addEventListener("touchstart", () => {
+            if (!shooting) {
+                shooting = true;
+                shoot();
+            }
+        });
+
+        shootButton.addEventListener("touchend", () => {
+            shooting = false;
+        });
+
+        setInterval(() => {
+            enemies.push({
+                x: Math.random() * canvas.width,
+                y: 0,
+            });
+        }, 1000);
+
+        draw();
     </script>
 </body>
 </html>
