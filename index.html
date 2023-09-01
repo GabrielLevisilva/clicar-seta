@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Editor de Personagens</title>
     <style>
         .player {
             width: 50px;
@@ -30,6 +30,14 @@
             player.style.cursor = "grabbing"; // Altera o cursor durante o arrasto
         });
 
+        player.addEventListener("touchstart", (e) => {
+            isDragging = true;
+            const touch = e.touches[0];
+            // Calcula o deslocamento entre o toque e a posição atual do jogador
+            offsetX = touch.clientX - player.getBoundingClientRect().left;
+            offsetY = touch.clientY - player.getBoundingClientRect().top;
+        });
+
         document.addEventListener("mousemove", (e) => {
             if (!isDragging) return;
 
@@ -41,9 +49,25 @@
             updatePlayerPosition();
         });
 
+        document.addEventListener("touchmove", (e) => {
+            if (!isDragging) return;
+            const touch = e.touches[0];
+
+            // Calcula as novas coordenadas com base no toque e no deslocamento
+            playerX = touch.clientX - offsetX;
+            playerY = touch.clientY - offsetY;
+
+            // Atualiza a posição do jogador
+            updatePlayerPosition();
+        });
+
         document.addEventListener("mouseup", () => {
             isDragging = false;
             player.style.cursor = "grab"; // Restaura o cursor quando o arrasto termina
+        });
+
+        player.addEventListener("touchend", () => {
+            isDragging = false;
         });
 
         // Função para atualizar a posição do jogador
