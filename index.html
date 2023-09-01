@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .player {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            position: absolute;
+            cursor: grab; /* Define o cursor como uma mãozinha para indicar arrastar */
+        }
+    </style>
+</head>
+<body>
+    <div class="player"></div>
+
+    <script>
+        const player = document.querySelector(".player");
+        let isDragging = false; // Flag para rastrear o estado de arrastar
+        let offsetX, offsetY;
+
+        player.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            // Calcula o deslocamento entre o clique do mouse e a posição atual do jogador
+            offsetX = e.clientX - player.getBoundingClientRect().left;
+            offsetY = e.clientY - player.getBoundingClientRect().top;
+            player.style.cursor = "grabbing"; // Altera o cursor durante o arrasto
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+
+            // Calcula as novas coordenadas com base no mouse e no deslocamento
+            playerX = e.clientX - offsetX;
+            playerY = e.clientY - offsetY;
+
+            // Atualiza a posição do jogador
+            updatePlayerPosition();
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+            player.style.cursor = "grab"; // Restaura o cursor quando o arrasto termina
+        });
+
+        // Função para atualizar a posição do jogador
+        function updatePlayerPosition() {
+            player.style.left = playerX + "px";
+            player.style.top = playerY + "px";
+        }
+    </script>
+</body>
+</html>
